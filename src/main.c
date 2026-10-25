@@ -44,9 +44,6 @@ static ring_t ring_eth_to_crsf;
 static volatile uint8_t bay_tx_active;
 static volatile uint8_t bay_tx_left;
 static volatile uint16_t bay_last_rx;
-#ifdef CRSF_APPEND_FF_MARKER
-static volatile uint8_t bay_ff_pending;
-#endif
 
 static void bay_timer_setup(void)
 {
@@ -204,9 +201,6 @@ void usart2_isr(void)
 			ring_push(&ring_crsf_to_eth, b);
 			kick_tx(USART1);
 			bay_last_rx = (uint16_t)TIM_CNT(TIM2);
-#ifdef CRSF_APPEND_FF_MARKER
-			bay_ff_pending = 1;
-#endif
 		}
 #else
 		ring_push(&ring_crsf_to_eth, b);
@@ -215,7 +209,7 @@ void usart2_isr(void)
 	}
 
 	if ((USART_CR1(USART2) & USART_CR1_TXEIE) &&
-    (USART_SR(USART2) & USART_SR_TXE)) {
+	    (USART_SR(USART2) & USART_SR_TXE)) {
 		uint8_t b;
 #ifdef CRSF_MODULE_BAY
 		if (bay_tx_left && ring_pop(&ring_eth_to_crsf, &b)) {
@@ -280,16 +274,6 @@ int main(void)
 #ifdef CRSF_MODULE_BAY
 		uint16_t bay_rx_idle_us =
 			(uint16_t)(TIM_CNT(TIM2) - bay_last_rx);
-
-#ifdef CRSF_APPEND_FF_MARKER
-		/* Diagnostic delimiter: append 0xFF after each bay RX burst. */
-		if (bay_ff_pending && bay_rx_idle_us > BAY_FRAME_GAP_US) {
-			bay_ff_pending = 0;
-			ring_push(&ring_crsf_to_eth, 0xffu);
-			kick_tx(USART1);
-		}
-#endif
-
 		/* Send only after the radio frame has ended (~3 byte times). */
 		if (!bay_tx_active && !ring_empty(&ring_eth_to_crsf)) {
 			if (bay_rx_idle_us > BAY_FRAME_GAP_US) {

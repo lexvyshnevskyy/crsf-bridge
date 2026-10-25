@@ -133,38 +133,43 @@ Set **both** CH9121 UARTs to 921600. Default clock mode is required for that rat
 
 Bay pin 5 is one inverted half-duplex wire. Two NPN transistors invert it back to a normal UART and let the STM32 drive the wire only while sending. Flash **only the radio-side STM32** with the `genericSTM32F103C6_bay` firmware. The receiver-side board keeps the normal full-duplex build.
 
-The current bay build enables a temporary diagnostic delimiter: it appends one
-`0xFF` byte after every bay receive burst before sending the bytes to the
-CH9121. A captured RC stream should therefore look like `27 bytes, FF, 27
-bytes, FF, ...` while debugging. Remove `-DCRSF_APPEND_FF_MARKER` from the bay
-environment in `platformio.ini` to restore a transparent byte stream.
+The bay build runs at **400000 baud** and forwards bytes transparently. It does
+not insert delimiters or diagnostic marker bytes.
 
 EdgeTX: Internal RF **Off**, External RF **CRSF**, baud **400000**.
+
+![TX12/TX16 module-bay inverter schematic](docs/module-bay-interface.svg)
 
 ```text
 Bay pin 3 ---- 3.3 V regulator ---- STM32 3.3 V
 Bay pin 4 ----------------------- GND
 
-3.3 V
-  |
-[4.7 kΩ]
-  |
-Bay pin 5 ----+----[1 kΩ]---- C
-              |              Q1 2N3904     flat face, pins down: E B C
-              |              E ---- GND
-              |              B ----[4.7 kΩ]---- PA2 (pin 12)
-              |
-              +----[4.7 kΩ]---- B
-                                Q2 2N3904
-                                E ---- GND
-                                C ----+---- PA3 (pin 13)
-                                      |
-                                   [4.7 kΩ]
-                                      |
                                      3.3 V
+                                       |
+                                    [4.7 kΩ]
+                                       |
+Bay pin 5 ----+----[1 kΩ]---- C Q1     |
+              |                 E ---- GND
+              |                 B ----[4.7 kΩ]---- PA2 (pin 12, TX)
+              |
+              +----[4.7 kΩ]----+---- B Q2
+                                     |      E ---- GND
+                                     |
+                                     +-- A --|>|-- K --+
+                                              D1 BAT54  |
+                                                       |
+                                          C Q2 --------+---- PA3 (pin 13, RX)
+                                                       |
+                                                    [4.7 kΩ]
+                                                       |
+                                                     3.3 V
 ```
 
-BC547 uses the opposite TO-92 order: **C B E**. Q1 sends to the radio. Q2 receives from the radio. PA9/PA10 still go straight to the CH9121.
+The stripe/cathode end of D1 faces the Q2 collector and PA3. Use a fast
+Schottky diode such as BAT54. It prevents Q2 from entering deep saturation,
+which otherwise makes the rising edge too slow at 400 kbaud.
+BC547 uses the opposite TO-92 order: **C B E**. Q1 sends to the radio. Q2
+receives from the radio. PA9/PA10 still go straight to the CH9121.
 
 ```bash
 pio run -e genericSTM32F103C6_bay
