@@ -1,5 +1,7 @@
 # CRSF ↔ CH9121 baud bridge (STM32F103C6T6)
 
+**English** | [Українська](README.uk.md)
+
 Transparent bidirectional UART bridge so Crossfire / ExpressLRS **CRSF at 400000** can ride Ethernet via **CH9121**. The CH9121 UART runs at **921600**, the fastest rate in its Default clock list (230400 / 460800 / 921600).
 
 ```
