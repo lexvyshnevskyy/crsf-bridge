@@ -13,6 +13,10 @@ except ImportError:
 
 
 def reset_to_run(ser):
+    """Reset the ESP32 programmer through the CH343 control lines.
+
+    :param serial.Serial ser: Open programmer serial port.
+    """
     # CH343 DTR/RTS auto-reset: DTR=GPIO0, RTS=EN, both active-low through transistors.
     ser.dtr = False
     ser.rts = True
@@ -22,6 +26,15 @@ def reset_to_run(ser):
 
 
 def read_until(ser, pred, timeout):
+    """Print programmer output until a predicate accepts one line.
+
+    :param serial.Serial ser: Open programmer serial port.
+    :param callable pred: Predicate receiving each decoded line.
+    :param float timeout: Maximum wait in seconds.
+    :return: The accepted line.
+    :rtype: str
+    :raises SystemExit: If no accepted line arrives before the timeout.
+    """
     deadline = time.time() + timeout
     buf = b""
     while time.time() < deadline:
@@ -38,6 +51,7 @@ def read_until(ser, pred, timeout):
 
 
 def main():
+    """Parse command-line options and execute the requested programmer action."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", default="/dev/ttyACM0")
     parser.add_argument("--ping", action="store_true")

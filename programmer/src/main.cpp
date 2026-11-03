@@ -1,5 +1,6 @@
-/*
- * STM32F103 UART programmer running on the YD-ESP32-23 (ESP32-S3).
+/**
+ * @file main.cpp
+ * @brief STM32F103 UART programmer for the YD-ESP32-23 (ESP32-S3).
  *
  * USB-UART (CH343, /dev/ttyACM0) is the host console at 115200 8N1.
  * GPIO17/18 talk to the STM32 ROM bootloader at 115200 8E1.
@@ -29,6 +30,7 @@ static HardwareSerial Console(0);
 static HardwareSerial Stm32(1);
 static uint8_t image[FLASH_MAX];
 
+/** @brief Put BOOT0 and NRST in the normal-run idle state. */
 static void pins_idle() {
   pinMode(PIN_BOOT0, OUTPUT);
   pinMode(PIN_NRST, OUTPUT_OPEN_DRAIN);
@@ -36,6 +38,7 @@ static void pins_idle() {
   digitalWrite(PIN_NRST, HIGH);
 }
 
+/** @brief Reset the target into its ROM bootloader or application. @param[in] bootloader True selects the ROM bootloader. */
 static void stm32_reset_into(bool bootloader) {
   digitalWrite(PIN_BOOT0, bootloader ? HIGH : LOW);
   delay(5);
@@ -45,6 +48,7 @@ static void stm32_reset_into(bool bootloader) {
   delay(50);
 }
 
+/** @brief Read one byte from the STM32 with a timeout. @param[in] timeout_ms Timeout in milliseconds. @return Byte value or -1 on timeout. */
 static int read_stm(uint32_t timeout_ms) {
   uint32_t start = millis();
   while (millis() - start < timeout_ms) {
@@ -55,12 +59,14 @@ static int read_stm(uint32_t timeout_ms) {
   return -1;
 }
 
+/** @brief Discard all pending bytes from the target UART. */
 static void drain_stm() {
   while (Stm32.available()) {
     Stm32.read();
   }
 }
 
+/** @brief Wait for a ROM-loader ACK or NACK. @param[in] timeout_ms Timeout in milliseconds. @return True only for ACK. */
 static bool wait_ack(uint32_t timeout_ms) {
   uint32_t start = millis();
   while (millis() - start < timeout_ms) {
@@ -78,6 +84,7 @@ static bool wait_ack(uint32_t timeout_ms) {
   return false;
 }
 
+/** @brief Send a bootloader command and its complement. @param[in] cmd Command byte. @return True when acknowledged. */
 static bool send_cmd(uint8_t cmd) {
   uint8_t frame[2] = {cmd, static_cast<uint8_t>(~cmd)};
   Stm32.write(frame, 2);
@@ -85,6 +92,7 @@ static bool send_cmd(uint8_t cmd) {
   return wait_ack(1000);
 }
 
+/** @brief Synchronize with the STM32 system bootloader. @return True on success. */
 static bool sync_bootloader() {
   for (int attempt = 0; attempt < 5; attempt++) {
     drain_stm();
@@ -98,6 +106,7 @@ static bool sync_bootloader() {
   return false;
 }
 
+/** @brief Read an exact number of target bytes. @param[out] dst Destination buffer. @param[in] n Byte count. @param[in] timeout_ms Per-byte timeout. @return True on success. */
 static bool read_exact(uint8_t *dst, int n, uint32_t timeout_ms) {
   for (int i = 0; i < n; i++) {
     int b = read_stm(timeout_ms);
@@ -109,7 +118,7 @@ static bool read_exact(uint8_t *dst, int n, uint32_t timeout_ms) {
   return true;
 }
 
-/* Returns chip id, or 0 on failure. Prefers extended erase when advertised. */
+/** @brief Read the target chip ID and erase capability. @param[out] has_ext_erase Set when extended erase is advertised. @return Chip ID, or zero on failure. */
 static uint16_t read_chip_id(bool *has_ext_erase) {
   *has_ext_erase = false;
   if (!send_cmd(0x00)) {
@@ -148,6 +157,7 @@ static uint16_t read_chip_id(bool *has_ext_erase) {
   return (static_cast<uint16_t>(idb[0]) << 8) | idb[1];
 }
 
+/** @brief Erase all target flash. @param[in] extended Select extended-erase command. @return True on success. */
 static bool mass_erase(bool extended) {
   if (extended) {
     if (!send_cmd(0x44)) {
@@ -167,6 +177,7 @@ static bool mass_erase(bool extended) {
   return wait_ack(8000);
 }
 
+/** @brief Write one block through the ROM bootloader. @param[in] addr Flash address. @param[in] data Block data. @param[in] len Block length. @return True on success. */
 static bool write_block(uint32_t addr, const uint8_t *data, size_t len) {
   if (!send_cmd(0x31)) {
     return false;
@@ -197,6 +208,7 @@ static bool write_block(uint32_t addr, const uint8_t *data, size_t len) {
   return wait_ack(2000);
 }
 
+/** @brief Erase and program the buffered firmware image. @param[in] size Image size. @param[out] chip_id Detected target ID. @return True on success. */
 static bool program_image(size_t size, uint16_t *chip_id) {
   stm32_reset_into(true);
   if (!sync_bootloader()) {
@@ -244,6 +256,7 @@ static bool program_image(size_t size, uint16_t *chip_id) {
   return true;
 }
 
+/** @brief Calculate reflected IEEE CRC-32. @param[in] data Input bytes. @param[in] len Input length. @return CRC-32 value. */
 static uint32_t crc32_ieee(const uint8_t *data, size_t len) {
   uint32_t crc = 0xFFFFFFFFu;
   for (size_t i = 0; i < len; i++) {
@@ -256,6 +269,7 @@ static uint32_t crc32_ieee(const uint8_t *data, size_t len) {
   return ~crc;
 }
 
+/** @brief Read one host command line. @param[out] buf Destination. @param[in] cap Buffer capacity. @return True when a nonempty line was read. */
 static bool read_line(char *buf, size_t cap) {
   size_t i = 0;
   uint32_t start = millis();
@@ -278,6 +292,7 @@ static bool read_line(char *buf, size_t cap) {
   return false;
 }
 
+/** @brief Receive a binary image from the host. @param[in] size Expected byte count. @return True when complete. */
 static bool read_image(size_t size) {
   size_t got = 0;
   uint32_t start = millis();
@@ -295,7 +310,7 @@ static bool read_image(size_t size) {
   return true;
 }
 
-/* CRSF test generator: stream a valid RC_CHANNELS frame on GPIO17, 8N1. */
+/** @brief Calculate the CRSF DVB-S2 CRC-8. @param[in] d Input bytes. @param[in] n Input length. @return CRC-8 value. */
 static uint8_t crsf_crc8(const uint8_t *d, size_t n) {
   uint8_t crc = 0;
   for (size_t i = 0; i < n; i++) {
@@ -307,6 +322,7 @@ static uint8_t crsf_crc8(const uint8_t *d, size_t n) {
   return crc;
 }
 
+/** @brief Stream valid RC_CHANNELS test frames on GPIO17. @param[in] baud UART rate. @param[in] seconds Test duration. */
 static void gen_crsf(uint32_t baud, uint32_t seconds) {
   uint16_t ch[16] = {992, 992, 172, 992, 172, 992, 1811, 992,
                      992, 992, 992, 992, 992, 992, 992, 992};
@@ -343,6 +359,7 @@ static void gen_crsf(uint32_t baud, uint32_t seconds) {
                  static_cast<unsigned long>(baud));
 }
 
+/** @brief Initialize the host console, target UART, and control pins. */
 void setup() {
   pins_idle();
   Console.setRxBufferSize(4096);
@@ -352,6 +369,7 @@ void setup() {
   Console.println("READY");
 }
 
+/** @brief Process one host protocol command. */
 void loop() {
   char line[80];
   if (!read_line(line, sizeof line)) {

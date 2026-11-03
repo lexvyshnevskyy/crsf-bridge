@@ -1,10 +1,12 @@
-/*
- * CRSF baud-rate bridge for STM32F103C6T6
+/**
+ * @file main.c
+ * @brief Transparent CRSF-to-CH9121 UART bridge for STM32F103C6T6.
  *
- * USART2 @ 400000  <->  CRSF (receiver or TX12/TX16)
- * USART1 @ 921600 <->  CH9121 (highest rate in Default clock mode)
- *
- * Bidirectional transparent byte pipe. Same binary on both boards.
+ * @details USART2 carries CRSF at 400000 baud (or the configured override),
+ * while USART1 connects to a CH9121 at 921600 baud. Interrupt-driven ring
+ * buffers provide a bidirectional byte-transparent path. When
+ * CRSF_MODULE_BAY is defined, USART2 is operated as an inverted half-duplex
+ * TX12/TX16 module-bay interface.
  */
 
 #include <libopencm3/stm32/rcc.h>
@@ -19,22 +21,27 @@
  * Aircraft side (SineLink slave UART1, full duplex):  416700.
  * Override with -DCRSF_BAUD=... in platformio.ini.
  */
+/** @brief CRSF-side UART baud rate; may be overridden by the build. */
 #ifndef CRSF_BAUD
 #define CRSF_BAUD     400000u
 #endif
+/** @brief CH9121-side UART baud rate. */
 #define ETH_BAUD      921600u
 
 /* Ring buffers: sized for CRSF bursts with headroom on the 921600 link */
 #define RING_SIZE     512u
 #define RING_MASK     (RING_SIZE - 1u)
 
+/** @brief Lock-free single-producer/single-consumer byte ring buffer. */
 typedef struct {
 	volatile uint16_t head;
 	volatile uint16_t tail;
 	uint8_t data[RING_SIZE];
 } ring_t;
 
+/** @brief Bytes waiting to travel from CRSF to Ethernet. */
 static ring_t ring_crsf_to_eth;
+/** @brief Bytes waiting to travel from Ethernet to CRSF. */
 static ring_t ring_eth_to_crsf;
 
 #ifdef CRSF_MODULE_BAY
@@ -45,6 +52,7 @@ static volatile uint8_t bay_tx_active;
 static volatile uint8_t bay_tx_left;
 static volatile uint16_t bay_last_rx;
 
+/** @brief Configure TIM2 as a free-running 1 MHz module-bay gap timer. */
 static void bay_timer_setup(void)
 {
 	rcc_periph_clock_enable(RCC_TIM2);
@@ -54,6 +62,7 @@ static void bay_timer_setup(void)
 	timer_enable_counter(TIM2);
 }
 
+/** @brief Drive PA2 low as GPIO so the external inverter releases bay pin 5. */
 static void bay_release_tx_pin(void)
 {
 	gpio_clear(GPIOA, GPIO_USART2_TX);
@@ -61,6 +70,7 @@ static void bay_release_tx_pin(void)
 		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO_USART2_TX);
 }
 
+/** @brief Return PA2 to the USART2 alternate function for transmission. */
 static void bay_drive_tx_pin(void)
 {
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
@@ -72,16 +82,19 @@ static void bay_drive_tx_pin(void)
 #define LED_PORT GPIOC
 #define LED_PIN  GPIO13
 
+/** @brief Test whether a ring contains no bytes. @param[in] r Ring to test. @return Nonzero when empty. */
 static inline int ring_empty(const ring_t *r)
 {
 	return r->head == r->tail;
 }
 
+/** @brief Test whether a ring has no free slot. @param[in] r Ring to test. @return Nonzero when full. */
 static inline int ring_full(const ring_t *r)
 {
 	return ((r->head + 1u) & RING_MASK) == r->tail;
 }
 
+/** @brief Append one byte, dropping it if the ring is full. @param[in,out] r Destination ring. @param[in] b Byte to append. */
 static inline void ring_push(ring_t *r, uint8_t b)
 {
 	if (ring_full(r)) {
@@ -91,6 +104,7 @@ static inline void ring_push(ring_t *r, uint8_t b)
 	r->head = (r->head + 1u) & RING_MASK;
 }
 
+/** @brief Remove one byte from a ring. @param[in,out] r Source ring. @param[out] b Received byte. @return One on success, zero if empty. */
 static inline int ring_pop(ring_t *r, uint8_t *b)
 {
 	if (ring_empty(r)) {
@@ -101,6 +115,7 @@ static inline int ring_pop(ring_t *r, uint8_t *b)
 	return 1;
 }
 
+/** @brief Configure the 8 MHz HSE, 72 MHz system clock, and peripheral clocks. */
 static void clock_setup(void)
 {
 	/* HSE 8 MHz -> PLL x9 = 72 MHz (standard Blue Pill / many F103 boards) */
@@ -113,6 +128,7 @@ static void clock_setup(void)
 	rcc_periph_clock_enable(RCC_USART2);
 }
 
+/** @brief Configure both USART pin pairs and the optional status LED. */
 static void gpio_setup(void)
 {
 	/* USART1 (CH9121): PA9 TX, PA10 RX */
@@ -133,6 +149,12 @@ static void gpio_setup(void)
 	gpio_set(LED_PORT, LED_PIN); /* off (active low) */
 }
 
+/**
+ * @brief Configure and enable one 8N1 USART.
+ * @param[in] usart libopencm3 USART peripheral identifier.
+ * @param[in] baud Requested baud rate.
+ * @param[in] irqn NVIC interrupt number for the peripheral.
+ */
 static void usart_setup_one(uint32_t usart, uint32_t baud, uint8_t irqn)
 {
 	usart_set_baudrate(usart, baud);
@@ -151,6 +173,7 @@ static void usart_setup_one(uint32_t usart, uint32_t baud, uint8_t irqn)
 	usart_enable(usart);
 }
 
+/** @brief Configure the CH9121 and CRSF UARTs. */
 static void usart_setup(void)
 {
 	/* USART1 on APB2 @ 72 MHz → 921600 (BRR 0x4E, +0.16%) */
@@ -163,11 +186,13 @@ static void usart_setup(void)
 #endif
 }
 
+/** @brief Enable TX-empty interrupts to start or resume queued transmission. @param[in] usart USART to start. */
 static void kick_tx(uint32_t usart)
 {
 	USART_CR1(usart) |= USART_CR1_TXEIE;
 }
 
+/** @brief Service CH9121-side receive and transmit interrupts. */
 void usart1_isr(void)
 {
 	/* CH9121 <-> eth ring */
@@ -190,6 +215,7 @@ void usart1_isr(void)
 	}
 }
 
+/** @brief Service CRSF-side receive, transmit, and half-duplex completion. */
 void usart2_isr(void)
 {
 	/* CRSF <-> crsf ring */
@@ -239,6 +265,7 @@ void usart2_isr(void)
 #endif
 }
 
+/** @brief Configure SysTick to generate a 1 ms system timebase. */
 static void systick_setup(void)
 {
 	/* 1 ms tick @ 72 MHz */
@@ -249,13 +276,16 @@ static void systick_setup(void)
 	systick_counter_enable();
 }
 
+/** @brief Milliseconds elapsed since startup. */
 static volatile uint32_t millis;
 
+/** @brief Increment the millisecond timebase from the SysTick interrupt. */
 void sys_tick_handler(void)
 {
 	millis++;
 }
 
+/** @brief Initialize the bridge and run its forwarding loop. @return Unreachable. */
 int main(void)
 {
 	clock_setup();

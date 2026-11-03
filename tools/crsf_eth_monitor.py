@@ -45,6 +45,11 @@ CH_LOW, CH_MID = 172, 992   # CRSF ticks for 988 us and 1500 us
 
 
 def crc8(data):
+    """Calculate the CRSF DVB-S2 CRC-8.
+
+    :param bytes data: Bytes covered by the checksum.
+    :return: The checksum as an integer from 0 to 255.
+    """
     crc = 0
     for b in data:
         crc ^= b
@@ -54,6 +59,11 @@ def crc8(data):
 
 
 def build_rc_frame():
+    """Build a safe, low-throttle CRSF RC_CHANNELS test frame.
+
+    :return: Complete CRSF frame addressed to the transmitter module.
+    :rtype: bytes
+    """
     ch = [CH_MID, CH_MID, CH_LOW, CH_MID] + [CH_LOW] * 12   # AETR, throttle low
     bits = 0
     for i, v in enumerate(ch):
@@ -63,6 +73,13 @@ def build_rc_frame():
 
 
 def decode(ftype, p):
+    """Decode selected CRSF payloads into human-readable text.
+
+    :param int ftype: CRSF frame type.
+    :param bytes p: Frame payload without type and CRC bytes.
+    :return: Decoded summary, or an empty string for unsupported data.
+    :rtype: str
+    """
     try:
         if ftype == 0x21:
             return "mode=" + p.split(b"\0")[0].decode(errors="replace")
@@ -83,7 +100,10 @@ def decode(ftype, p):
 
 
 class Parser:
+    """Incremental CRSF stream parser and statistics collector."""
+
     def __init__(self):
+        """Initialize an empty parser and zero all counters."""
         self.buf = bytearray()
         self.frames = {}
         self.latest = {}
@@ -91,6 +111,10 @@ class Parser:
         self.raw = 0
 
     def feed(self, data):
+        """Consume raw UART bytes and extract all complete valid frames.
+
+        :param bytes data: Newly received stream data.
+        """
         self.raw += len(data)
         self.buf += data
         while True:
@@ -117,6 +141,11 @@ class Parser:
                 del self.buf[0]
 
     def report(self):
+        """Create the current one-line statistics and telemetry report.
+
+        :return: Human-readable report text.
+        :rtype: str
+        """
         parts = [f"rx {self.raw} B"]
         for t, n in sorted(self.frames.items()):
             parts.append(f"{FRAME_NAMES.get(t, f'0x{t:02X}')}={n}")
@@ -129,6 +158,7 @@ class Parser:
 
 
 def main():
+    """Run the UDP/TCP CRSF monitor command-line application."""
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--udp", type=int, metavar="PORT", help="listen on this UDP port")
