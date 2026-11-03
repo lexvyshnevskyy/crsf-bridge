@@ -107,7 +107,31 @@ circuit in [the main engineering schematic](docs/module-bay-interface-engineerin
 
 ## CH9121 configuration (both modules)
 
-Use **NetModuleConfig** (or serial CFG commands). Critical UART settings:
+Use **NetModuleConfig** (or serial CFG commands). A copy of the Windows
+configuration utility is included in the repository:
+
+- [Download NetModuleConfig.zip](docs/NetModuleConfig.zip)
+- Archive contents: `NetModuleConfig.exe`
+- SHA-256: `5eab3486cbf965d3b66d465fd687440166185423d4e8c40620eac59b749224ba`
+
+`NetModuleConfig.exe` is a third-party Windows binary, not built from this
+repository's source. Scan and evaluate it according to your normal security
+policy before running it.
+
+Configuration procedure:
+
+1. Extract `NetModuleConfig.zip` on a Windows PC.
+2. Connect the PC and one CH9121 module to the same Ethernet network and power
+   the module. Configure one module at a time if both still have identical
+   factory network settings.
+3. Start `NetModuleConfig.exe`, discover/select the module, and set its network
+   and UART parameters to the values below.
+4. Write/save the configuration, restart the module, and read it back to
+   confirm the saved values.
+5. Repeat for the second CH9121 using its own unique device IP and the opposite
+   module as the UDP destination.
+
+Critical UART settings:
 
 | Parameter | Value |
 |-----------|--------|
