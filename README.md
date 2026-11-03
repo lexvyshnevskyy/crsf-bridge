@@ -92,11 +92,10 @@ STM32 3V3 ──────────────── CH9121 VCCIO / logic 
 
 ### Board B — TX12 / TX16 side
 
-Same STM32↔CH9121 wiring. CRSF side goes to the radio (module bay / external CRSF pad) at **400000**.
-
-**Inverted UART:** many JR-style module bays need inverted TTL. The F103 USART has no hardware invert. If the radio expects inverted CRSF, put a simple inverter (transistor / 74HC04 / dedicated inverter) on PA2/PA3 for that board only. ELRS / CRSF receivers are usually non-inverted.
-
-**Half-duplex single wire:** if the pad is one wire, tie PA2 and PA3 with ~1 kΩ (TX drives, RX listens) and treat the pad as that node. Prefer separate TX/RX when the hardware allows it.
+Same STM32↔CH9121 wiring. The TX12/TX16 bay uses one **inverted,
+half-duplex** CRSF wire at 400000 baud. Do not connect PA2 and PA3 directly to
+bay pin 5 and do not simply tie PA2 to PA3. Use the verified two-transistor
+circuit in [the main engineering schematic](docs/module-bay-interface-engineering.svg).
 
 ### Wiring tips for 921600
 
@@ -138,38 +137,65 @@ not insert delimiters or diagnostic marker bytes.
 
 EdgeTX: Internal RF **Off**, External RF **CRSF**, baud **400000**.
 
-![TX12/TX16 module-bay inverter schematic](docs/module-bay-interface.svg)
+### Main working schematic
 
-```text
-Bay pin 3 ---- 3.3 V regulator ---- STM32 3.3 V
-Bay pin 4 ----------------------- GND
+The following classical engineering drawing is the source of truth for the
+radio-side assembly. It supersedes the earlier hand drawing and text-only
+sketches.
 
-                                     3.3 V
-                                       |
-                                    [4.7 kΩ]
-                                       |
-Bay pin 5 ----+----[1 kΩ]---- C Q1     |
-              |                 E ---- GND
-              |                 B ----[4.7 kΩ]---- PA2 (pin 12, TX)
-              |
-              +----[4.7 kΩ]----+---- B Q2
-                                     |      E ---- GND
-                                     |
-                                     +-- A --|>|-- K --+
-                                              D1 BAT54  |
-                                                       |
-                                          C Q2 --------+---- PA3 (pin 13, RX)
-                                                       |
-                                                    [4.7 kΩ]
-                                                       |
-                                                     3.3 V
-```
+![Tested TX12/TX16 module-bay bridge engineering schematic](docs/module-bay-interface-engineering.svg)
 
-The stripe/cathode end of D1 faces the Q2 collector and PA3. Use a fast
-Schottky diode such as BAT54. It prevents Q2 from entering deep saturation,
-which otherwise makes the rising edge too slow at 400 kbaud.
-BC547 uses the opposite TO-92 order: **C B E**. Q1 sends to the radio. Q2
-receives from the radio. PA9/PA10 still go straight to the CH9121.
+For a simplified signal-flow view, see the
+[colored wiring overview](docs/module-bay-interface.svg). Use the engineering
+schematic above for component orientation, pin numbers, fabrication, and
+inspection.
+
+Tested assembly decisions:
+
+- **R2 is 1 kΩ**.
+- **R4 and R5 are not fitted.** The ready-made controller board supplies the
+  required pull-ups; adding the external R5 caused incorrect operation on the
+  tested assembly.
+- U1 is a stock STM32F103 controller module. Its crystal, reset/boot network,
+  supply decoupling, and board-level pull-ups are not duplicated externally.
+- U3 takes bay pin 3 VCC and pin 4 GND, regulates them to 3.3 V, and powers
+  both the STM32 controller module and the CH9121 module.
+- CH9121 UART1 connects to PA9/PA10.
+- D1 and D2 are **1N5817 Schottky diodes** used as transistor
+  anti-saturation clamps.
+
+The component naming follows the submitted drawing: **Q1 is the receive
+inverter** (bay → PA3), and **Q2 is the transmit inverter** (PA2 → bay).
+
+| Ref | Value | Connection / purpose |
+|---|---:|---|
+| R1 | 4.7 kΩ | Bay pin 5 → Q1 base |
+| R2 | 1 kΩ | Q2 collector → bay pin 5; contention/current limiting |
+| R3 | 4.7 kΩ | PA2 → Q2 base |
+| R4 | DNP | No external PA3 pull-up; provided on the controller board |
+| R5 | DNP | No external bay pull-up; do not fit |
+| Q1 | 2N3904 | Receive inverter |
+| Q2 | 2N3904 | Transmit inverter |
+| D1 | 1N5817 | Q1 anti-saturation clamp |
+| D2 | 1N5817 | Q2 anti-saturation clamp |
+| U1 | Stock STM32F103 module | Controller with support components fitted |
+| J2 | CH9121 module | Ethernet ↔ UART bridge |
+| U3 | MP2307 module | Bay 5–8.4 V → regulated 3.3 V for U1 and J2 |
+
+For both clamp diodes, connect the **anode to the transistor base** and the
+**stripe/cathode to its collector**. Verify the actual transistor datasheet
+before soldering: the onsemi 2N3904 TO-92 is E–B–C, but similarly marked parts
+from other manufacturers may differ.
+
+U1 is intentionally shown as a module rather than a bare MCU. Do not duplicate
+its on-board crystal, reset/boot parts, decoupling, or pull-ups. The PA2/PA3
+inverter and PA9/PA10 CH9121 connections remain exactly as shown.
+
+Design references: [STM32F103C6 datasheet](https://www.st.com/resource/en/datasheet/stm32f103c6.pdf),
+[STM32F10xxx hardware guidelines](https://www.st.com/resource/en/application_note/an2586-stm32-hardware-design-guidelines-stmicroelectronics.pdf),
+[2N3904 datasheet](https://www.onsemi.com/pdf/datasheet/2n3904-d.pdf),
+[1N5817 datasheet](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf), and
+[MP2307 datasheet](https://www.monolithicpower.com/en/documentview/productdocument/index/version/2/document_type/Datasheet/lang/en/sku/MP2307/document_id/503/).
 
 ```bash
 pio run -e genericSTM32F103C6_bay

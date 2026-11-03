@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1080" viewBox="0 0 1900 1080" role="img" aria-labelledby="title desc">
+  <title id="title">TX12 and TX16 module-bay CRSF bridge engineering schematic</title>
+  <desc id="desc">Engineering schematic for a tested 400 kilobaud inverted half-duplex CRSF interface. An MP2307 powers ready-made STM32 and CH9121 modules. Two 2N3904 transistors use 1N5817 anti-saturation clamps. External R4 and R5 pull-ups are omitted.</desc>
+  <defs>
+    <style>
+      .sheet{fill:#fff;stroke:#111;stroke-width:2}.wire{fill:none;stroke:#111;stroke-width:2.4;stroke-linecap:square;stroke-linejoin:miter}
+      .thin{fill:none;stroke:#111;stroke-width:1.5}.body{fill:#fff;stroke:#111;stroke-width:2.2}.junction{fill:#111}
+      .title{font:700 28px Arial,sans-serif;fill:#111}.subtitle{font:15px Arial,sans-serif;fill:#222}.section{font:700 18px Arial,sans-serif;fill:#111}
+      .ref{font:700 15px Arial,sans-serif;fill:#111}.value{font:14px Arial,sans-serif;fill:#111}.pin{font:13px 'DejaVu Sans Mono',monospace;fill:#111}
+      .note{font:13px Arial,sans-serif;fill:#222}.small{font:11px Arial,sans-serif;fill:#222}.net{font:700 13px Arial,sans-serif;fill:#154a8a}
+      .powerText{font:700 13px Arial,sans-serif;fill:#a21b1b}.power{fill:none;stroke:#a21b1b;stroke-width:2.2}.frameText{font:12px Arial,sans-serif;fill:#111}
+    </style>
+    <marker id="npnArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#111"/>
+    </marker>
+  </defs>
+
+  <rect class="sheet" x="18" y="18" width="1864" height="1044"/>
+  <text class="title" x="50" y="58">TX12 / TX16 MODULE-BAY CRSF ↔ ETHERNET BRIDGE</text>
+  <text class="subtitle" x="50" y="84">Engineering schematic · tested configuration · inverted half-duplex CRSF 400000 baud · CH9121 UART1 921600 baud</text>
+  <line class="thin" x1="38" y1="102" x2="1862" y2="102"/>
+
+  <!-- J1: radio module bay -->
+  <text class="section" x="60" y="135">BAY POWER AND SIGNAL</text>
+  <rect class="body" x="60" y="155" width="210" height="255"/>
+  <text class="ref" x="82" y="182">J1</text><text class="value" x="118" y="182">TX12 / TX16 BAY</text>
+  <line class="wire" x1="215" y1="215" x2="280" y2="215"/><text class="pin" x="82" y="220">1  NC</text><path class="wire" d="M274 208 l12 12 m0 -12 l-12 12"/>
+  <line class="wire" x1="215" y1="250" x2="280" y2="250"/><text class="pin" x="82" y="255">2  NC</text><path class="wire" d="M274 243 l12 12 m0 -12 l-12 12"/>
+  <line class="wire" x1="215" y1="300" x2="330" y2="300"/><text class="pin" x="82" y="305">3  VCC</text><text class="net" x="216" y="292">5–8.4 V</text>
+  <line class="wire" x1="215" y1="345" x2="355" y2="345"/><text class="pin" x="82" y="350">4  GND</text>
+  <line class="wire" x1="215" y1="390" x2="340" y2="390"/><text class="pin" x="82" y="395">5  CRSF</text><text class="net" x="216" y="382">BAY_CRSF</text>
+
+  <!-- U3 regulator, input wires intentionally separated -->
+  <rect class="body" x="390" y="155" width="235" height="155"/>
+  <text class="ref" x="410" y="182">U3</text><text class="value" x="447" y="182">MP2307 BUCK MODULE</text>
+  <text class="pin" x="405" y="215">IN+</text><text class="pin" x="405" y="275">IN−</text>
+  <text class="pin" x="570" y="215">OUT+</text><text class="pin" x="570" y="275">OUT−</text>
+  <line class="wire" x1="330" y1="300" x2="330" y2="208"/><line class="wire" x1="330" y1="208" x2="390" y2="208"/>
+  <line class="wire" x1="355" y1="345" x2="355" y2="268"/><line class="wire" x1="355" y1="268" x2="390" y2="268"/>
+  <line class="wire" x1="625" y1="208" x2="720" y2="208"/><polygon class="power" points="720,188 712,202 728,202"/><line class="power" x1="720" y1="202" x2="720" y2="208"/>
+  <text class="powerText" x="742" y="205">MODULE_3V3 → U1 + J2</text>
+  <line class="wire" x1="625" y1="268" x2="720" y2="268"/><line class="wire" x1="720" y1="268" x2="720" y2="295"/>
+  <line class="thin" x1="705" y1="295" x2="735" y2="295"/><line class="thin" x1="710" y1="302" x2="730" y2="302"/><line class="thin" x1="716" y1="309" x2="724" y2="309"/>
+  <text class="net" x="742" y="274">POWER_GND → U1 + J2</text>
+  <line class="wire" x1="355" y1="345" x2="355" y2="365"/><line class="thin" x1="340" y1="365" x2="370" y2="365"/><line class="thin" x1="345" y1="372" x2="365" y2="372"/><line class="thin" x1="351" y1="379" x2="359" y2="379"/>
+  <text class="note" x="400" y="330">Set OUT+ to 3.30 V before connecting either module</text>
+
+  <!-- Main CRSF half-duplex node -->
+  <text class="section" x="60" y="455">INVERTED</text>
+  <text class="section" x="60" y="477">HALF-DUPLEX INTERFACE</text>
+  <text class="note" x="60" y="505">No external R4 or R5.</text>
+  <text class="note" x="60" y="525">Pull-ups are provided on the</text>
+  <text class="note" x="60" y="545">ready-made controller board.</text>
+  <line class="wire" x1="340" y1="390" x2="340" y2="725"/><circle class="junction" cx="340" cy="520" r="5"/><circle class="junction" cx="340" cy="725" r="5"/>
+
+  <!-- RX path: bay to Q1 to U1 PA3 -->
+  <line class="wire" x1="340" y1="520" x2="410" y2="520"/>
+  <rect class="body" x="410" y="504" width="100" height="32"/><line class="wire" x1="510" y1="520" x2="590" y2="520"/>
+  <text class="ref" x="435" y="498">R1</text><text class="value" x="466" y="498">4.7 kΩ</text>
+
+  <circle class="body" cx="690" cy="520" r="78"/>
+  <line class="wire" x1="590" y1="520" x2="650" y2="520"/><line class="wire" x1="650" y1="478" x2="650" y2="562"/>
+  <line class="wire" x1="650" y1="495" x2="725" y2="445"/><line class="wire" x1="650" y1="545" x2="725" y2="595" marker-end="url(#npnArrow)"/>
+  <line class="wire" x1="725" y1="445" x2="725" y2="405"/><line class="wire" x1="725" y1="595" x2="725" y2="630"/>
+  <text class="ref" x="663" y="515">Q1</text><text class="value" x="660" y="534">2N3904</text><text class="small" x="633" y="470">B</text><text class="small" x="735" y="444">C</text><text class="small" x="735" y="605">E</text>
+  <line class="wire" x1="725" y1="630" x2="725" y2="650"/><line class="thin" x1="710" y1="650" x2="740" y2="650"/><line class="thin" x1="715" y1="657" x2="735" y2="657"/><line class="thin" x1="721" y1="664" x2="729" y2="664"/>
+
+  <!-- D1 Q1 Baker clamp: anode base, cathode collector -->
+  <line class="wire" x1="590" y1="520" x2="590" y2="395"/><line class="wire" x1="590" y1="395" x2="625" y2="395"/>
+  <polygon class="body" points="625,375 625,415 665,395"/><line class="wire" x1="670" y1="373" x2="670" y2="417"/><path class="wire" d="M670 373 l9 8 M670 417 l-9 -8"/>
+  <line class="wire" x1="670" y1="395" x2="725" y2="395"/><line class="wire" x1="725" y1="395" x2="725" y2="405"/>
+  <text class="ref" x="610" y="362">D1</text><text class="value" x="644" y="362">1N5817</text><text class="small" x="596" y="435">A</text><text class="small" x="680" y="435">K / stripe</text>
+
+  <line class="wire" x1="725" y1="405" x2="1120" y2="405"/><line class="wire" x1="1120" y1="405" x2="1120" y2="385"/><line class="wire" x1="1120" y1="385" x2="1175" y2="385"/>
+  <text class="net" x="1010" y="396">CRSF_RX</text>
+
+  <!-- TX path: U1 PA2 through Q2 and R2 to bay -->
+  <circle class="body" cx="690" cy="800" r="78"/>
+  <line class="wire" x1="790" y1="800" x2="730" y2="800"/><line class="wire" x1="730" y1="758" x2="730" y2="842"/>
+  <line class="wire" x1="730" y1="775" x2="655" y2="725"/><line class="wire" x1="730" y1="825" x2="655" y2="875" marker-end="url(#npnArrow)"/>
+  <line class="wire" x1="655" y1="875" x2="655" y2="905"/>
+  <text class="ref" x="672" y="795">Q2</text><text class="value" x="669" y="814">2N3904</text><text class="small" x="739" y="750">B</text><text class="small" x="631" y="725">C</text><text class="small" x="631" y="887">E</text>
+  <line class="wire" x1="655" y1="905" x2="655" y2="925"/><line class="thin" x1="640" y1="925" x2="670" y2="925"/><line class="thin" x1="645" y1="932" x2="665" y2="932"/><line class="thin" x1="651" y1="939" x2="659" y2="939"/>
+
+  <line class="wire" x1="655" y1="725" x2="565" y2="725"/><rect class="body" x="465" y="709" width="100" height="32"/>
+  <line class="wire" x1="465" y1="725" x2="340" y2="725"/>
+  <text class="ref" x="487" y="701">R2</text><text class="value" x="518" y="701">1 kΩ</text>
+
+  <line class="wire" x1="1175" y1="540" x2="1085" y2="540"/><rect class="body" x="985" y="524" width="100" height="32"/>
+  <line class="wire" x1="985" y1="540" x2="850" y2="540"/><line class="wire" x1="850" y1="540" x2="850" y2="800"/><line class="wire" x1="850" y1="800" x2="790" y2="800"/>
+  <text class="ref" x="1007" y="516">R3</text><text class="value" x="1038" y="516">4.7 kΩ</text><text class="net" x="1095" y="531">CRSF_TX</text>
+
+  <!-- D2 Q2 Baker clamp: anode base, cathode collector -->
+  <circle class="junction" cx="850" cy="800" r="5"/>
+  <line class="wire" x1="850" y1="800" x2="850" y2="685"/><line class="wire" x1="850" y1="685" x2="815" y2="685"/>
+  <polygon class="body" points="815,665 815,705 775,685"/><line class="wire" x1="770" y1="663" x2="770" y2="707"/><path class="wire" d="M770 663 l-9 8 M770 707 l9 -8"/>
+  <line class="wire" x1="770" y1="685" x2="655" y2="685"/><line class="wire" x1="655" y1="685" x2="655" y2="725"/><circle class="junction" cx="655" cy="725" r="5"/>
+  <text class="ref" x="758" y="650">D2</text><text class="value" x="792" y="650">1N5817</text><text class="small" x="814" y="718">A</text><text class="small" x="682" y="718">K / stripe</text>
+
+  <!-- U1 ready-made controller module -->
+  <text class="section" x="1175" y="135">READY-MADE CONTROLLER</text>
+  <rect class="body" x="1175" y="155" width="390" height="600"/>
+  <text class="ref" x="1245" y="188">U1</text><text class="value" x="1285" y="188">STM32F103 CONTROLLER MODULE</text>
+  <text class="note" x="1225" y="212">Stock module: HSE, reset/boot and</text>
+  <text class="note" x="1225" y="232">decoupling and pull-ups fitted</text>
+
+  <line class="wire" x1="1135" y1="270" x2="1175" y2="270"/><polygon class="power" points="1135,250 1127,264 1143,264"/><line class="power" x1="1135" y1="264" x2="1135" y2="270"/>
+  <text class="pin" x="1187" y="275">3V3 / VCC</text><text class="powerText" x="1013" y="266">MODULE_3V3</text>
+  <line class="wire" x1="1135" y1="320" x2="1175" y2="320"/><line class="wire" x1="1135" y1="320" x2="1135" y2="340"/>
+  <line class="thin" x1="1120" y1="340" x2="1150" y2="340"/><line class="thin" x1="1125" y1="347" x2="1145" y2="347"/><line class="thin" x1="1131" y1="354" x2="1139" y2="354"/>
+  <text class="pin" x="1187" y="325">GND</text><text class="net" x="1045" y="316">POWER_GND</text>
+
+  <text class="pin" x="1187" y="390">PA3 / RX2 · pin 13</text>
+  <text class="pin" x="1187" y="545">PA2 / TX2 · pin 12</text>
+  <line class="wire" x1="1565" y1="385" x2="1695" y2="385"/><text class="pin" x="1367" y="370">PA9 / TX1 · pin 30</text>
+  <line class="wire" x1="1565" y1="450" x2="1695" y2="450"/><text class="pin" x="1359" y="435">PA10 / RX1 · pin 31</text>
+  <text class="note" x="1225" y="690">Use module pad names when soldering.</text>
+  <text class="note" x="1225" y="712">MCU pin numbers are references.</text>
+  <text class="note" x="1225" y="734">Do not add external R4 or R5.</text>
+
+  <!-- J2 ready-made CH9121 module -->
+  <text class="section" x="1685" y="260">ETHERNET UART</text>
+  <rect class="body" x="1695" y="280" width="155" height="300"/>
+  <text class="ref" x="1715" y="308">J2</text><text class="value" x="1750" y="308">CH9121</text>
+  <text class="pin" x="1710" y="390">RXD1</text><text class="pin" x="1710" y="455">TXD1</text>
+  <line class="wire" x1="1695" y1="510" x2="1660" y2="510"/><polygon class="power" points="1660,490 1652,504 1668,504"/><line class="power" x1="1660" y1="504" x2="1660" y2="510"/>
+  <text class="pin" x="1710" y="515">VCC / 3V3</text><text class="powerText" x="1580" y="485">MODULE_3V3</text>
+  <line class="wire" x1="1695" y1="555" x2="1660" y2="555"/><line class="wire" x1="1660" y1="555" x2="1660" y2="575"/>
+  <line class="thin" x1="1645" y1="575" x2="1675" y2="575"/><line class="thin" x1="1650" y1="582" x2="1670" y2="582"/><line class="thin" x1="1656" y1="589" x2="1664" y2="589"/>
+  <text class="pin" x="1710" y="560">GND</text><text class="net" x="1580" y="550">POWER_GND</text>
+  <text class="small" x="1670" y="612">PA9 → RXD1</text><text class="small" x="1670" y="630">TXD1 → PA10</text>
+
+  <!-- Notes and title block -->
+  <rect x="38" y="980" width="1210" height="62" fill="#fff" stroke="#111" stroke-width="1.5"/>
+  <text class="frameText" x="52" y="999">ASSEMBLY NOTES:</text>
+  <text class="small" x="52" y="1018">1. D1/D2 (1N5817) anode to transistor base; cathode stripe to collector.  2. R2 = 1 kΩ.  3. R4 and R5 are intentionally not fitted.</text>
+  <text class="small" x="52" y="1035">4. U3 powers both stock modules from bay VCC/GND. Verify 3.30 V first.  5. Verify the actual 2N3904 pinout before soldering.</text>
+
+  <rect x="1248" y="980" width="614" height="62" fill="#f4f4f4" stroke="#111" stroke-width="1.5"/>
+  <line class="thin" x1="1248" y1="1011" x2="1862" y2="1011"/><line class="thin" x1="1500" y1="980" x2="1500" y2="1042"/><line class="thin" x1="1710" y1="1011" x2="1710" y2="1042"/>
+  <text class="frameText" x="1260" y="1000">PROJECT: CRSF-BRIDGE</text><text class="frameText" x="1512" y="1000">DRAWING: MODULE-BAY INTERFACE</text>
+  <text class="frameText" x="1260" y="1030">STATUS: TESTED HARDWARE</text><text class="frameText" x="1512" y="1030">REV G</text><text class="frameText" x="1722" y="1030">SHEET 1 / 1</text>
+</svg>
