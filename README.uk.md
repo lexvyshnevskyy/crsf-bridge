@@ -135,7 +135,7 @@ EdgeTX: Internal RF **Off**, External RF **CRSF**, baud **400000**.
 
 ![Перевірена інженерна схема моста module bay TX12/TX16](docs/module-bay-interface-engineering.svg)
 
-Для спрощеного огляду потоку сигналів дивіться [кольорову схему підключення](docs/module-bay-interface.svg). Для орієнтації компонентів, номерів контактів, виготовлення та перевірки використовуйте інженерне креслення.
+Для орієнтації компонентів, номерів контактів, виготовлення та перевірки використовуйте інженерне креслення вище.
 
 Перевірені рішення:
 
@@ -166,6 +166,27 @@ EdgeTX: Internal RF **Off**, External RF **CRSF**, baud **400000**.
 Для D1 і D2 підключіть **анод до бази**, а **катод зі смугою — до колектора** відповідного транзистора. Перед паянням перевірте datasheet саме вашого виробника: onsemi 2N3904 у TO-92 має порядок E–B–C, але аналоги можуть відрізнятися.
 
 Довідкові документи: [STM32F103C6](https://www.st.com/resource/en/datasheet/stm32f103c6.pdf), [рекомендації STM32F10xxx](https://www.st.com/resource/en/application_note/an2586-stm32-hardware-design-guidelines-stmicroelectronics.pdf), [2N3904](https://www.onsemi.com/pdf/datasheet/2n3904-d.pdf), [1N5817](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf), [MP2307](https://www.monolithicpower.com/en/documentview/productdocument/index/version/2/document_type/Datasheet/lang/en/sku/MP2307/document_id/503/).
+
+### Корпус module bay для друку
+
+У каталозі `docs` є готові до друку STL-файли та їхні редаговані джерела
+SolidWorks. Зібраний корпус уміщує CH9121, модуль STM32, перетворювач
+живлення, контакти bay і доступний ззовні роз'єм RJ45.
+
+| Деталь | Файл для друку | Редаговане джерело SolidWorks |
+|---|---|---|
+| Основний корпус модуля | [tx12-16_module.STL](docs/tx12-16_module.STL) | [tx12-16_module.SLDPRT](docs/tx12-16_module.SLDPRT) |
+| Секція Ethernet / RJ45 | [tx12-16_ethernet.STL](docs/tx12-16_ethernet.STL) | [tx12-16_ethernet.SLDPRT](docs/tx12-16_ethernet.SLDPRT) |
+| Тримач контактів bay | [tx12-16-contact_holder.STL](docs/tx12-16-contact_holder.STL) | [tx12-16-contact_holder.SLDPRT](docs/tx12-16-contact_holder.SLDPRT) |
+
+Перед остаточним друком перевірте масштаб деталей і допуски принтера. Проєкт
+не задає матеріал, висоту шару, підтримки або інші параметри слайсера.
+
+| Внутрішнє складання | Закритий корпус |
+|---|---|
+| ![CH9121 та STM32 усередині відкритого корпусу bay](docs/bay-module-open.jpg) | ![Готовий друкований корпус bay із роз'ємом RJ45](docs/bay-module-enclosure.jpg) |
+| Вигляд установленого модуля збоку | Підключення Ethernet |
+| ![Друкований модуль у відсіку передавача, вигляд збоку](docs/bay-module-installed-side.jpg) | ![Кабель Ethernet у встановленому модулі bay](docs/bay-module-installed-ethernet.jpg) |
 
 ## Збірка bay-прошивки
 

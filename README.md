@@ -147,10 +147,8 @@ sketches.
 
 ![Tested TX12/TX16 module-bay bridge engineering schematic](docs/module-bay-interface-engineering.svg)
 
-For a simplified signal-flow view, see the
-[colored wiring overview](docs/module-bay-interface.svg). Use the engineering
-schematic above for component orientation, pin numbers, fabrication, and
-inspection.
+Use the engineering schematic above for component orientation, pin numbers,
+fabrication, and inspection.
 
 Tested assembly decisions:
 
@@ -198,6 +196,29 @@ Design references: [STM32F103C6 datasheet](https://www.st.com/resource/en/datash
 [2N3904 datasheet](https://www.onsemi.com/pdf/datasheet/2n3904-d.pdf),
 [1N5817 datasheet](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf), and
 [MP2307 datasheet](https://www.monolithicpower.com/en/documentview/productdocument/index/version/2/document_type/Datasheet/lang/en/sku/MP2307/document_id/503/).
+
+### Printable TX12/TX16 bay enclosure
+
+The `docs` directory includes the printable enclosure parts as STL files and
+their editable SolidWorks sources. The completed assembly holds the CH9121,
+STM32 module, power converter, bay contacts, and an externally accessible RJ45
+connector.
+
+| Part | Ready to print | Editable SolidWorks source |
+|---|---|---|
+| Main module enclosure | [tx12-16_module.STL](docs/tx12-16_module.STL) | [tx12-16_module.SLDPRT](docs/tx12-16_module.SLDPRT) |
+| Ethernet / RJ45 section | [tx12-16_ethernet.STL](docs/tx12-16_ethernet.STL) | [tx12-16_ethernet.SLDPRT](docs/tx12-16_ethernet.SLDPRT) |
+| Bay contact holder | [tx12-16-contact_holder.STL](docs/tx12-16-contact_holder.STL) | [tx12-16-contact_holder.SLDPRT](docs/tx12-16-contact_holder.SLDPRT) |
+
+Check the part scale and printer tolerances before the final print. The
+repository does not prescribe a material, layer height, support strategy, or
+other slicer settings.
+
+| Internal assembly | Closed enclosure |
+|---|---|
+| ![CH9121 and STM32 installed inside the open bay enclosure](docs/bay-module-open.jpg) | ![Completed printed bay enclosure with RJ45 socket](docs/bay-module-enclosure.jpg) |
+| Installed side view | Installed Ethernet connection |
+| ![Printed module installed in the transmitter bay, side view](docs/bay-module-installed-side.jpg) | ![Ethernet cable connected to the installed bay module](docs/bay-module-installed-ethernet.jpg) |
 
 ```bash
 pio run -e genericSTM32F103C6_bay
