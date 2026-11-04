@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Send a STM32 .bin to the YD-ESP32-23 programmer firmware."""
+"""Send a STM32 .bin to the YD-ESP32-23 programmer firmware.
+
+Copyright (c) 2026 Lex Vyshnevskyy. Licensed under the MIT License.
+Project: https://github.com/lexvyshnevskyy/crsf-bridge
+"""
 
 import argparse
 import sys

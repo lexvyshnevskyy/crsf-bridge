@@ -1,6 +1,11 @@
 /**
  * @file main.cpp
  * @brief STM32F103 UART programmer for the YD-ESP32-23 (ESP32-S3).
+ * @author Lex Vyshnevskyy
+ * @copyright Copyright (c) 2026 Lex Vyshnevskyy
+ * @see https://github.com/lexvyshnevskyy/crsf-bridge
+ * @par License
+ * MIT; see the repository LICENSE file.
  *
  * USB-UART (CH343, /dev/ttyACM0) is the host console at 115200 8N1.
  * GPIO17/18 talk to the STM32 ROM bootloader at 115200 8E1.

@@ -1,6 +1,11 @@
 /**
  * @file main.c
  * @brief Transparent CRSF-to-CH9121 UART bridge for STM32F103C6T6.
+ * @author Lex Vyshnevskyy
+ * @copyright Copyright (c) 2026 Lex Vyshnevskyy
+ * @see https://github.com/lexvyshnevskyy/crsf-bridge
+ * @par License
+ * MIT; see the repository LICENSE file.
  *
  * @details USART2 carries CRSF at 400000 baud (or the configured override),
  * while USART1 connects to a CH9121 at 921600 baud. Interrupt-driven ring

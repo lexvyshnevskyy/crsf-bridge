@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Talk to the ground CH9121 over Ethernet, act as the radio handset, and
+"""CRSF Ethernet monitor from the crsf-bridge project.
+
+Copyright (c) 2026 Lex Vyshnevskyy. Licensed under the MIT License.
+Project: https://github.com/lexvyshnevskyy/crsf-bridge
+
+Talk to the ground CH9121 over Ethernet, act as the radio handset, and
 report CRSF frames coming back from the SineLink master / UAV.
 
 The SineLink master is a CRSF transmitter module: it sends telemetry on the

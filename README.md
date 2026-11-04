@@ -334,3 +334,20 @@ At 72 MHz:
 - **Does not:** parse CRSF, change frame timing, or configure the CH9121 for you  
 
 If packets look corrupted, verify **921600** on **both** CH9121s and that radio/RX stay at 400000.
+
+## License and attribution
+
+Copyright © 2026 **Lex Vyshnevskyy**. This project is open-source software
+under the [MIT License](LICENSE). You may use, copy, and modify it, but copies
+or substantial portions must retain the copyright and license notice.
+
+The canonical project repository is
+[lexvyshnevskyy/crsf-bridge](https://github.com/lexvyshnevskyy/crsf-bridge).
+Source-file headers include this attribution and repository address so forks
+can retain the project's origin.
+
+An open-source license cannot exclude people solely by country or nationality.
+The author's position concerning use by Russian state, military, occupation,
+intelligence, and defense organizations is documented separately in the
+[ethical-use statement](ETHICAL_USE.md). That statement is a request and
+support policy, not an additional license restriction.
