@@ -351,3 +351,6 @@ The author's position concerning use by Russian state, military, occupation,
 intelligence, and defense organizations is documented separately in the
 [ethical-use statement](ETHICAL_USE.md). That statement is a request and
 support policy, not an additional license restriction.
+
+For private vulnerability reporting, supported versions, deployment guidance,
+and coordinated disclosure, see the [Security Policy](SECURITY.md).
