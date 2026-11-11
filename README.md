@@ -86,8 +86,8 @@ CRSF receiver RX ◄──────── STM32 PA2 (USART2 TX)
 CRSF GND ───────────────── STM32 GND
 CRSF 3V3 / 5V (per RX) ─── power as required by the receiver
 
-STM32 PA9  (USART1 TX) ──► CH9121 RXD1
-STM32 PA10 (USART1 RX) ◄── CH9121 TXD1
+STM32 PA9  (USART1 TX) ──► CH9121 RXD2
+STM32 PA10 (USART1 RX) ◄── CH9121 TXD2
 STM32 GND ──────────────── CH9121 GND
 STM32 3V3 ──────────────── CH9121 VCCIO / logic supply (per module)
 ```
@@ -103,7 +103,9 @@ circuit in [the main engineering schematic](docs/module-bay-interface-engineerin
 
 - Keep STM32↔CH9121 wires short (a few cm).
 - Solid common GND.
-- Prefer CH9121 **port 1** (has RTS/CTS on CH9121T if you later add flow control).
+- Use the CH9121 port configured for the matching UART speed and UDP channel.
+  In the SineLink-side dual-port configuration below, port 1 is reserved for
+  MAVLink and port 2 carries the 921600-baud STM/CRSF bridge.
 
 ## CH9121 configuration (both modules)
 
@@ -152,7 +154,37 @@ Network example (adjust IPs to your LAN):
 
 **UDP** is usually better for CRSF (no reconnect stall). Point each module at the other IP/port.
 
-Set **both** CH9121 UARTs to 921600. Default clock mode is required for that rate; Classical mode does not include 921600.
+Set the **CRSF bridge UART** on both CH9121 modules to 921600. Default clock
+mode is required for that rate; Classical mode does not include 921600. A
+second UART used for MAVLink can use its own required speed, as shown below.
+
+### SineLink-side dual-port configuration
+
+The tested SineLink-side CH9121 uses the static address `192.168.88.200`, mask
+`255.255.255.0`, and gateway `192.168.88.1`, with DHCP and Serial Negotiation
+disabled. **Enable Port2** must be checked. Both channels use `UDP CLIENT`, 8
+data bits, 1 stop bit, no parity, and packet timeout `0`.
+
+| Setting | Port 1 — MAVLink | Port 2 — TX12/TX16 CRSF bridge |
+|---|---:|---:|
+| Purpose | Forward MAVLink to operator PC | Forward STM bridge to bay module |
+| Local port | `14550` | `14551` |
+| Destination IP | `192.168.88.254` | `192.168.88.201` |
+| Destination port | `14550` | `14551` |
+| UART baud | `115200` | `921600` |
+| UART format | 8N1 | 8N1 |
+| Packet length | `1024` | `64` |
+| Packet timeout | `0` | `0` |
+
+The operator PC at `192.168.88.254` must listen for MAVLink UDP traffic on
+port `14550` and allow that port through its firewall. The radio-side CH9121
+at `192.168.88.201` must use UDP port `14551`, match the bridge UART at
+921600/8N1, and send return traffic to `192.168.88.200:14551` for two-way CRSF.
+Do not point MAVLink and CRSF at the same UDP port.
+
+| Port 1: MAVLink → operator PC | Port 2: CRSF → bay module |
+|---|---|
+| ![CH9121 SineLink-side Port 1 configured for MAVLink UDP 14550 to the operator PC](docs/ch9121-sinelink-port1-mavlink.png) | ![CH9121 SineLink-side Port 2 configured for CRSF UDP 14551 to the TX12/TX16 bay module](docs/ch9121-sinelink-port2-crsf.png) |
 
 ## TX12 module bay, two-way
 
@@ -244,12 +276,7 @@ other slicer settings.
 | Installed side view | Installed Ethernet connection |
 | ![Printed module installed in the transmitter bay, side view](docs/bay-module-installed-side.jpg) | ![Ethernet cable connected to the installed bay module](docs/bay-module-installed-ethernet.jpg) |
 
-```bash
-pio run -e genericSTM32F103C6_bay
-~/.platformio/penv/bin/python tools/flash_via_esp32.py .pio/build/genericSTM32F103C6_bay/firmware.bin
-```
-
-Disconnect the CH9121 from PA9/PA10 before that upload, then reconnect it. The level-shifter module is for separate 5 V TX/RX pads. It does not replace this circuit.
+Build and upload this board with the bay commands in [Build and upload each board](#build-and-upload-each-board). Unplug the CH9121 from PA9/PA10 during the upload, then reconnect it. The level-shifter module is for separate 5 V TX/RX pads. It does not replace this circuit.
 
 ## Program the STM32 with the YD-ESP32-23
 
@@ -273,12 +300,40 @@ cd ~/Projects/crsf-bridge/programmer
 pio run -t upload
 ```
 
-Build the bridge, then send it through the ESP32:
+## Build and upload each board
+
+Both images use the programmer wiring above. Unplug the CH9121 from PA9/PA10 before the upload. `DONE 0412` means the chip is an STM32F103C6 and the image is written. Reconnect the CH9121 to PA9/PA10 only after GPIO17 and GPIO18 are disconnected.
+
+### STM32 #1 (not the module bay)
+
+Full-duplex CRSF at 400000 on USART2. Use this image on the ground board and on a radio with separate TX and RX wires.
 
 ```bash
 cd ~/Projects/crsf-bridge
 pio run -e genericSTM32F103C6
 ~/.platformio/penv/bin/python tools/flash_via_esp32.py .pio/build/genericSTM32F103C6/firmware.bin
+```
+
+ST-Link, on SWDIO / SWCLK / GND / 3V3:
+
+```bash
+pio run -e genericSTM32F103C6 -t upload
+```
+
+### Module bay board
+
+Half-duplex CRSF at 400000 for the TX12 bay. Flash this image only on the board wired to bay pin 5.
+
+```bash
+cd ~/Projects/crsf-bridge
+pio run -e genericSTM32F103C6_bay
+~/.platformio/penv/bin/python tools/flash_via_esp32.py .pio/build/genericSTM32F103C6_bay/firmware.bin
+```
+
+ST-Link:
+
+```bash
+pio run -e genericSTM32F103C6_bay -t upload
 ```
 
 Check the wiring without erasing the STM32:
@@ -287,17 +342,11 @@ Check the wiring without erasing the STM32:
 ~/.platformio/penv/bin/python tools/flash_via_esp32.py --id
 ```
 
-`ID 0412` is the STM32F103C6. After `DONE`, the ESP32 releases BOOT0 and the bridge firmware runs. Reconnect the CH9121 to PA9/PA10 only after disconnecting GPIO17 and GPIO18.
+`ID 0412` is the STM32F103C6. After `DONE`, the ESP32 releases BOOT0 and the bridge firmware runs.
 
 ## Build & flash with ST-Link
 
-```bash
-cd ~/Projects/crsf-bridge
-pio run -e genericSTM32F103C6
-pio run -e genericSTM32F103C6 -t upload
-```
-
-ST-Link on SWDIO / SWCLK / GND / 3V3. For a Blue Pill / C8 board use `-e bluepill_f103c8`.
+The per-board commands are in [Build and upload each board](#build-and-upload-each-board). For a Blue Pill / C8 board use `-e bluepill_f103c8` instead of `-e genericSTM32F103C6`. ST-Link connects to SWDIO / SWCLK / GND / 3V3.
 
 ### Upload over serial (no ST-Link)
 
