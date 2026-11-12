@@ -47,9 +47,9 @@ The master is a CRSF transmitter module. It sends telemetry back on the same por
 
 ```bash
 # CH9121 in UDP mode with destination = this PC, port 2000
-python3 tools/crsf_eth_monitor.py --udp 2000
+python3 tools/crsf_eth_monitor.py --udp 14551
 # CH9121 in TCP CLIENT mode with destination = this PC, port 2000
-python3 tools/crsf_eth_monitor.py --tcp-server 2000
+python3 tools/crsf_eth_monitor.py --tcp-server 14551
 ```
 
 The tool prints raw byte count, CRSF frame counts by type, and CRC failures once per second. With a live SineLink link you should see `RC_CHANNELS` and `LINK_STATISTICS` climbing and `bad_crc=0`. Raw bytes with only `bad_crc` means a baud mismatch on one of the UARTs. No bytes means the CH9121 is not configured (factory default is 9600 baud, TCP client to 192.168.1.100:1000) or not reaching this PC.
@@ -209,11 +209,14 @@ fabrication, and inspection.
 Tested assembly decisions:
 
 - **R2 is 1 kΩ**.
-- **R4 and R5 are not fitted.** The ready-made controller board supplies the
-  required pull-ups; adding the external R5 caused incorrect operation on the
-  tested assembly.
+- **R4 is board-dependent.** Fit a **2.2 kΩ pull-up from MODULE_3V3 to
+  CRSF_RX/PA3** when the controller board does not provide a suitable PA3
+  pull-up. It is required for the tested **STM32_Smart V2.0** board.
+- **R5 is not fitted.** Adding the external bay-line pull-up caused incorrect
+  operation on the tested assembly.
 - U1 is a stock STM32F103 controller module. Its crystal, reset/boot network,
-  supply decoupling, and board-level pull-ups are not duplicated externally.
+  and supply decoupling are not duplicated externally. The PA3 pull-up must be
+  checked for the actual module revision.
 - U3 takes bay pin 3 VCC and pin 4 GND, regulates them to 3.3 V, and powers
   both the STM32 controller module and the CH9121 module.
 - CH9121 UART1 connects to PA9/PA10.
@@ -228,7 +231,7 @@ inverter** (bay → PA3), and **Q2 is the transmit inverter** (PA2 → bay).
 | R1 | 4.7 kΩ | Bay pin 5 → Q1 base |
 | R2 | 1 kΩ | Q2 collector → bay pin 5; contention/current limiting |
 | R3 | 4.7 kΩ | PA2 → Q2 base |
-| R4 | DNP | No external PA3 pull-up; provided on the controller board |
+| R4 | 2.2 kΩ, board-dependent | MODULE_3V3 → CRSF_RX/PA3; fit for STM32_Smart V2.0 or whenever PA3 lacks a suitable pull-up |
 | R5 | DNP | No external bay pull-up; do not fit |
 | Q1 | 2N3904 | Receive inverter |
 | Q2 | 2N3904 | Transmit inverter |
@@ -244,8 +247,9 @@ before soldering: the onsemi 2N3904 TO-92 is E–B–C, but similarly marked par
 from other manufacturers may differ.
 
 U1 is intentionally shown as a module rather than a bare MCU. Do not duplicate
-its on-board crystal, reset/boot parts, decoupling, or pull-ups. The PA2/PA3
-inverter and PA9/PA10 CH9121 connections remain exactly as shown.
+its on-board crystal, reset/boot parts, or decoupling. Check whether the module
+provides a suitable PA3 pull-up and fit R4 when required. The PA2/PA3 inverter
+and PA9/PA10 CH9121 connections remain exactly as shown.
 
 Design references: [STM32F103C6 datasheet](https://www.st.com/resource/en/datasheet/stm32f103c6.pdf),
 [STM32F10xxx hardware guidelines](https://www.st.com/resource/en/application_note/an2586-stm32-hardware-design-guidelines-stmicroelectronics.pdf),

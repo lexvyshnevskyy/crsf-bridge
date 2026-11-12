@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1080" viewBox="0 0 1900 1080" role="img" aria-labelledby="title desc">
   <title id="title">TX12 and TX16 module-bay CRSF bridge engineering schematic</title>
-  <desc id="desc">Engineering schematic for a tested 400 kilobaud inverted half-duplex CRSF interface. An MP2307 powers ready-made STM32 and CH9121 modules. Two 2N3904 transistors use 1N5817 anti-saturation clamps. External R4 and R5 pull-ups are omitted.</desc>
+  <desc id="desc">Engineering schematic for a tested 400 kilobaud inverted half-duplex CRSF interface. An MP2307 powers ready-made STM32 and CH9121 modules. Two 2N3904 transistors use 1N5817 anti-saturation clamps. Optional R4 pulls PA3 up on controller boards such as STM32_Smart V2.0 that do not provide a suitable pull-up.</desc>
   <defs>
     <style>
       .sheet{fill:#fff;stroke:#111;stroke-width:2}.wire{fill:none;stroke:#111;stroke-width:2.4;stroke-linecap:square;stroke-linejoin:miter}
@@ -48,9 +48,10 @@
   <!-- Main CRSF half-duplex node -->
   <text class="section" x="60" y="455">INVERTED</text>
   <text class="section" x="60" y="477">HALF-DUPLEX INTERFACE</text>
-  <text class="note" x="60" y="505">No external R4 or R5.</text>
-  <text class="note" x="60" y="525">Pull-ups are provided on the</text>
-  <text class="note" x="60" y="545">ready-made controller board.</text>
+  <text class="note" x="60" y="505">R4 is board-dependent.</text>
+  <text class="note" x="60" y="525">Fit 2.2 kΩ for STM32_Smart V2.0</text>
+  <text class="note" x="60" y="545">or when PA3 has no suitable pull-up.</text>
+  <text class="note" x="60" y="565">R5 is not fitted.</text>
   <line class="wire" x1="340" y1="390" x2="340" y2="725"/><circle class="junction" cx="340" cy="520" r="5"/><circle class="junction" cx="340" cy="725" r="5"/>
 
   <!-- RX path: bay to Q1 to U1 PA3 -->
@@ -73,6 +74,16 @@
 
   <line class="wire" x1="725" y1="405" x2="1120" y2="405"/><line class="wire" x1="1120" y1="405" x2="1120" y2="385"/><line class="wire" x1="1120" y1="385" x2="1175" y2="385"/>
   <text class="net" x="1010" y="396">CRSF_RX</text>
+
+  <!-- R4 optional PA3 pull-up: required on STM32_Smart V2.0 and boards without a suitable on-board pull-up -->
+  <polygon class="power" points="940,285 932,299 948,299"/><line class="power" x1="940" y1="299" x2="940" y2="320"/>
+  <text class="powerText" x="840" y="278">MODULE_3V3</text>
+  <line class="wire" x1="940" y1="320" x2="940" y2="330"/>
+  <rect class="body" x="924" y="330" width="32" height="60"/>
+  <line class="wire" x1="940" y1="390" x2="940" y2="405"/><circle class="junction" cx="940" cy="405" r="5"/>
+  <text class="ref" x="855" y="335">R4</text><text class="value" x="855" y="355">2.2 kΩ</text>
+  <text class="small" x="855" y="375">OPTIONAL*</text>
+  <text class="small" x="790" y="430">* Fit for STM32_Smart V2.0 or if PA3 has no suitable pull-up</text>
 
   <!-- TX path: U1 PA2 through Q2 and R2 to bay -->
   <circle class="body" cx="690" cy="800" r="78"/>
@@ -102,7 +113,7 @@
   <rect class="body" x="1175" y="155" width="390" height="600"/>
   <text class="ref" x="1245" y="188">U1</text><text class="value" x="1285" y="188">STM32F103 CONTROLLER MODULE</text>
   <text class="note" x="1225" y="212">Stock module: HSE, reset/boot and</text>
-  <text class="note" x="1225" y="232">decoupling and pull-ups fitted</text>
+  <text class="note" x="1225" y="232">decoupling fitted; PA3 pull-up varies</text>
 
   <line class="wire" x1="1135" y1="270" x2="1175" y2="270"/><polygon class="power" points="1135,250 1127,264 1143,264"/><line class="power" x1="1135" y1="264" x2="1135" y2="270"/>
   <text class="pin" x="1187" y="275">3V3 / VCC</text><text class="powerText" x="1013" y="266">MODULE_3V3</text>
@@ -114,9 +125,10 @@
   <text class="pin" x="1187" y="545">PA2 / TX2 · pin 12</text>
   <line class="wire" x1="1565" y1="385" x2="1695" y2="385"/><text class="pin" x="1367" y="370">PA9 / TX1 · pin 30</text>
   <line class="wire" x1="1565" y1="450" x2="1695" y2="450"/><text class="pin" x="1359" y="435">PA10 / RX1 · pin 31</text>
-  <text class="note" x="1225" y="690">Use module pad names when soldering.</text>
-  <text class="note" x="1225" y="712">MCU pin numbers are references.</text>
-  <text class="note" x="1225" y="734">Do not add external R4 or R5.</text>
+  <text class="note" x="1225" y="675">Use module pad names when soldering.</text>
+  <text class="note" x="1225" y="697">MCU pin numbers are references.</text>
+  <text class="note" x="1225" y="719">Check whether PA3 has a pull-up.</text>
+  <text class="note" x="1225" y="741">Fit R4 where required. Do not fit R5.</text>
 
   <!-- J2 ready-made CH9121 module -->
   <text class="section" x="1685" y="260">ETHERNET UART</text>
@@ -133,11 +145,11 @@
   <!-- Notes and title block -->
   <rect x="38" y="980" width="1210" height="62" fill="#fff" stroke="#111" stroke-width="1.5"/>
   <text class="frameText" x="52" y="999">ASSEMBLY NOTES:</text>
-  <text class="small" x="52" y="1018">1. D1/D2 (1N5817) anode to transistor base; cathode stripe to collector.  2. R2 = 1 kΩ.  3. R4 and R5 are intentionally not fitted.</text>
-  <text class="small" x="52" y="1035">4. U3 powers both stock modules from bay VCC/GND. Verify 3.30 V first.  5. Verify the actual 2N3904 pinout before soldering.</text>
+  <text class="small" x="52" y="1018">1. D1/D2 (1N5817) anode to transistor base; cathode stripe to collector.  2. R2 = 1 kΩ.  3. R4 = 2.2 kΩ when PA3 lacks a suitable pull-up; R5 is not fitted.</text>
+  <text class="small" x="52" y="1035">4. Fit R4 for STM32_Smart V2.0.  5. U3 powers both modules; verify 3.30 V first.  6. Verify the actual 2N3904 pinout before soldering.</text>
 
   <rect x="1248" y="980" width="614" height="62" fill="#f4f4f4" stroke="#111" stroke-width="1.5"/>
   <line class="thin" x1="1248" y1="1011" x2="1862" y2="1011"/><line class="thin" x1="1500" y1="980" x2="1500" y2="1042"/><line class="thin" x1="1710" y1="1011" x2="1710" y2="1042"/>
   <text class="frameText" x="1260" y="1000">PROJECT: CRSF-BRIDGE</text><text class="frameText" x="1512" y="1000">DRAWING: MODULE-BAY INTERFACE</text>
-  <text class="frameText" x="1260" y="1030">STATUS: TESTED HARDWARE</text><text class="frameText" x="1512" y="1030">REV G</text><text class="frameText" x="1722" y="1030">SHEET 1 / 1</text>
+  <text class="frameText" x="1260" y="1030">STATUS: TESTED HARDWARE</text><text class="frameText" x="1512" y="1030">REV H</text><text class="frameText" x="1722" y="1030">SHEET 1 / 1</text>
 </svg>
